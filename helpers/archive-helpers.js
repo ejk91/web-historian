@@ -26,16 +26,29 @@ exports.initialize = function(pathsObj) {
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(callback) {
+  //retrieves list of Urls (in queue?)
 };
 
 exports.isUrlInList = function(url, callback) {
+  // calls readListofUrls to gain list
+  // checks if given url is in the list
+  // return boolean
 };
 
 exports.addUrlToList = function(url, callback) {
+  // if isURLInList is false
+    // we add URL to list
 };
 
 exports.isUrlArchived = function(url, callback) {
+  // if isURLInList is true
+    // check in archives to see if url files exists
+      // if true - load the page
+      // if false - say we are working on
 };
 
 exports.downloadUrls = function(urls) {
+  //is this the worker functionality
+  // worker will download url that is urlList
+  // archive that url
 };
