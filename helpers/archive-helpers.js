@@ -25,23 +25,50 @@ exports.initialize = function(pathsObj) {
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
+
+
 exports.readListOfUrls = function(callback) {
-  //retrieves list of Urls (in queue?)
+  fs.readFile(exports.paths['list'], function (err, data) {
+    if (err) { 
+      throw err; 
+    } else {
+      var urls = data.toString().split('\n');
+      callback(urls);
+    } 
+  });
+
 };
 
 exports.isUrlInList = function(url, callback) {
   // calls readListofUrls to gain list
+  var urlList = exports.readListOfUrls();
+  // console.log(urlList);
   // checks if given url is in the list
+  for (var i = 0; i < urlList.length; i++) {
+    if (urlList[i] === url) {
+      return true;
+    }
+  }
+  return false;
   // return boolean
 };
 
 exports.addUrlToList = function(url, callback) {
   // if isURLInList is false
+  if (!exports.isUrlInList(url)) {
     // we add URL to list
+    fs.appendFile(exports.paths.list, url + '\n', function(error) {
+      if (error) {
+        throw error;
+      } else {
+        console.log('Added ' + url + 'successfully');
+      }
+    });
+  }
 };
 
 exports.isUrlArchived = function(url, callback) {
-  // if isURLInList is true
+  // if isURLInList is true - fs.existsSync
     // check in archives to see if url files exists
       // if true - load the page
       // if false - say we are working on

@@ -9,20 +9,11 @@ var URL = require('url');
 exports.handleRequest = function (req, res) {
 
   //initially show the landing page - index.html
-
-  fs.readFile( __dirname + '/public/index.html', function (err, data) {
-    if (err) {
-      throw err; 
-    } else {
-      res.writeHead(200);
-      res.end(data);
-    }    
-  });
-
    //we recieved a get request
   if (req.method === 'GET') {
    // parse the url 
     var parseURL = URL.parse(req.url, true);
+
     // if we recieve no path name? - no extra query strings
     if (parseURL.pathname === '/' || parseURL.pathname === '/favicon.ico') {
       // load index.html
@@ -35,10 +26,12 @@ exports.handleRequest = function (req, res) {
           res.end(data);
         }    
       });
-    }
+    } 
     // if path name exists
     if (parseURL.pathname) {
       // call readListofURLS
+      archive.readListOfUrls('callback');
+      archive.addUrlToList(parseURL.pathname);
         // this will give us a list of current URLS
         // check if URL is in the list (isURLInList)
           // if URL is in the list
