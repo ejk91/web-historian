@@ -30,6 +30,7 @@ exports.initialize = function(pathsObj) {
 exports.readListOfUrls = function(callback) {
   fs.readFile(exports.paths['list'], function (err, data) {
     if (err) { 
+      console.log(err);
       throw err; 
     } else {
       var urls = data.toString().split('\n');
@@ -39,21 +40,32 @@ exports.readListOfUrls = function(callback) {
 
 };
 
-exports.isUrlInList = function(url, callback) {
-  // calls readListofUrls to gain list
-  fs.readFile(exports.paths['list'], function (err, data) {
-    if (err) { 
-      throw err; 
-    } else {
-      var urlList = data.toString().split('\n');
-      for (var i = 0; i < urlList.length; i++) {
-        if (urlList[i] === url) {
-          return callback(true);
-        }
+exports.isUrlInList = function(url, callback) { //REVIEW
+
+  var checkTheList = function(results) {
+    for (var i = 0; i < results.length; i++) {
+      if (results[i] === url) {
+        return callback(true);
       }
-      return callback(false);
-    } 
-  });
+    }
+    return callback(false);
+  };
+
+  exports.readListOfUrls(checkTheList); //WE CAN DO THIS BUT WITH CALLBACKS - we need it to finish running before going to next line
+  // calls readListofUrls to gain list
+  // fs.readFile(exports.paths['list'], function (err, data) {
+  //   if (err) { 
+  //     throw err; 
+  //   } else {
+  //     var urlList = data.toString().split('\n');
+  //     // for (var i = 0; i < urlList.length; i++) {
+  //     //   if (urlList[i] === url) {
+  //     //     return callback(true);
+  //     //   }
+  //     // }
+  //     // return callback(false);
+  //   } 
+  // });
   // checks if given url is in the list
 
   // return false;
@@ -62,16 +74,17 @@ exports.isUrlInList = function(url, callback) {
 
 exports.addUrlToList = function(url, callback) {
   // if isURLInList is false
-  if (!exports.isUrlInList(url)) {
+  // if (!exports.isUrlInList(url)) {
     // we add URL to list
-    fs.appendFile(exports.paths.list, url + '\n', function(error) {
-      if (error) {
-        throw error;
-      } else {
-        console.log('Added ' + url + 'successfully');
-      }
-    });
-  }
+  fs.appendFile(exports.paths.list, url + '\n', function(error) {
+    if (error) {
+      throw error;
+    } else {
+      console.log('Added ' + url + 'successfully');
+      callback();
+    }
+  });
+ // }
 };
 
 exports.isUrlArchived = function(url, callback) {
@@ -79,6 +92,16 @@ exports.isUrlArchived = function(url, callback) {
     // check in archives to see if url files exists
       // if true - load the page
       // if false - say we are working on
+
+    fs.readFile(exports.paths['list'], function (err, data) {
+    if (err) { 
+      throw err; 
+    } else {
+      var urls = data.toString().split('\n');
+      callback(urls);
+    } 
+  });
+
 };
 
 exports.downloadUrls = function(urls) {
