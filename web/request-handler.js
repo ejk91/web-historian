@@ -8,12 +8,12 @@ var http = require('./http-helpers.js');
 
 
 exports.handleRequest = function (req, res) {
+  var parseURL = URL.parse(req.url, true);
 
   //initially show the landing page - index.html
    //we recieved a get request
   if (req.method === 'GET') {
    // parse the url 
-    var parseURL = URL.parse(req.url, true);
 
     // if we recieve no path name? - no extra query strings
     if (parseURL.pathname === '/' || parseURL.pathname === '/favicon.ico') {
@@ -43,13 +43,24 @@ exports.handleRequest = function (req, res) {
       // if false
         // return 404 error
     }
-
   }
-
-
-
-    // this is post request 
+  // this is post request 
+  if (req.method === 'POST') {
+    req.on('data', function (data) {
+      var url = data.toString().slice(4);
+      fs.appendFile(archive.paths.list, url + '\n', function (error) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Added ' + url + ' successfully!');
+          res.writeHead(302, http.headers);
+          res.end();
+        }
+      });
+      
+    });
     // if path name exists
+  }
   // if (parseURL.pathname) {
     // call readListofURLS
     // archive.readListOfUrls('callback');
