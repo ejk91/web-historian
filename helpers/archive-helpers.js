@@ -41,15 +41,22 @@ exports.readListOfUrls = function(callback) {
 
 exports.isUrlInList = function(url, callback) {
   // calls readListofUrls to gain list
-  var urlList = exports.readListOfUrls();
-  // console.log(urlList);
+  fs.readFile(exports.paths['list'], function (err, data) {
+    if (err) { 
+      throw err; 
+    } else {
+      var urlList = data.toString().split('\n');
+      for (var i = 0; i < urlList.length; i++) {
+        if (urlList[i] === url) {
+          return callback(true);
+        }
+      }
+      return callback(false);
+    } 
+  });
   // checks if given url is in the list
-  for (var i = 0; i < urlList.length; i++) {
-    if (urlList[i] === url) {
-      return true;
-    }
-  }
-  return false;
+
+  // return false;
   // return boolean
 };
 
