@@ -93,7 +93,7 @@ exports.isUrlArchived = function(url, callback) {
       // if true - load the page
       // if false - say we are working on
 
-    fs.readFile(exports.paths['list'], function (err, data) {
+  fs.readFile(exports.paths['list'], function (err, data) {
     if (err) { 
       throw err; 
     } else {
