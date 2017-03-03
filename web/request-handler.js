@@ -33,7 +33,7 @@ exports.handleRequest = function (req, res) {
         if (err) {
           res.writeHead(404, http.headers);
           res.end();
-        } else {
+        } else {               
           res.writeHead(200, http.headers);
           res.end(data);
         }    

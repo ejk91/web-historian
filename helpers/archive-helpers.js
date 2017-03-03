@@ -93,12 +93,11 @@ exports.isUrlArchived = function(url, callback) {
       // if true - load the page
       // if false - say we are working on
 
-  fs.readFile(exports.paths['list'], function (err, data) {
+  fs.readFile(exports.paths.archivedSites + '/' + url, function (err, data) {
     if (err) { 
-      throw err; 
+      return callback(false); 
     } else {
-      var urls = data.toString().split('\n');
-      callback(urls);
+      return callback(true);
     } 
   });
 
@@ -108,4 +107,14 @@ exports.downloadUrls = function(urls) {
   //is this the worker functionality
   // worker will download url that is urlList
   // archive that url
+
+  for (var i = 0; i < urls.length; i++) {
+    fs.writeFile(exports.paths.archivedSites + '/' + urls[i], urls[i], function(err, data) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log('Downloaded' + urls[i]);
+      }
+    }); 
+  }
 };
