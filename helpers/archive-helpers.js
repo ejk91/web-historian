@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var request = require('request');
 var _ = require('underscore');
 
 /*
@@ -15,106 +16,51 @@ exports.paths = {
   list: path.join(__dirname, '../archives/sites.txt')
 };
 
-// Used for stubbing paths for tests, do not modify
+// Used for stubbing paths for tests
+
 exports.initialize = function(pathsObj) {
   _.each(pathsObj, function(path, type) {
     exports.paths[type] = path;
   });
 };
 
-// The following function names are provided to you to suggest how you might
-// modularize your code. Keep it clean!
-
-
 
 exports.readListOfUrls = function(callback) {
-  fs.readFile(exports.paths['list'], function (err, data) {
-    if (err) { 
-      console.log(err);
-      throw err; 
-    } else {
-      var urls = data.toString().split('\n');
-      callback(urls);
-    } 
+  fs.readFile(exports.paths.list, function(err, sites) {
+    sites = sites.toString().split('\n');
+    if (callback) {
+      callback(sites);
+    }
   });
-
 };
 
-exports.isUrlInList = function(url, callback) { //REVIEW
-
-  var checkTheList = function(results) {
-    for (var i = 0; i < results.length; i++) {
-      if (results[i] === url) {
-        return callback(true);
-      }
-    }
-    return callback(false);
-  };
-
-  exports.readListOfUrls(checkTheList); //WE CAN DO THIS BUT WITH CALLBACKS - we need it to finish running before going to next line
-  // calls readListofUrls to gain list
-  // fs.readFile(exports.paths['list'], function (err, data) {
-  //   if (err) { 
-  //     throw err; 
-  //   } else {
-  //     var urlList = data.toString().split('\n');
-  //     // for (var i = 0; i < urlList.length; i++) {
-  //     //   if (urlList[i] === url) {
-  //     //     return callback(true);
-  //     //   }
-  //     // }
-  //     // return callback(false);
-  //   } 
-  // });
-  // checks if given url is in the list
-
-  // return false;
-  // return boolean
+exports.isUrlInList = function(url, callback) {
+  exports.readListOfUrls(function(sites) {
+    var found = _.any(sites, function(site, i) {
+      return site.match(url);
+    });
+    callback(found);
+  });
 };
 
 exports.addUrlToList = function(url, callback) {
-  // if isURLInList is false
-  // if (!exports.isUrlInList(url)) {
-    // we add URL to list
-  fs.appendFile(exports.paths.list, url + '\n', function(error) {
-    if (error) {
-      throw error;
-    } else {
-      console.log('Added ' + url + 'successfully');
-      callback();
-    }
+  fs.appendFile(exports.paths.list, url + '\n', function(err, file) {
+    callback();
   });
- // }
 };
 
 exports.isUrlArchived = function(url, callback) {
-  // if isURLInList is true - fs.existsSync
-    // check in archives to see if url files exists
-      // if true - load the page
-      // if false - say we are working on
+  var sitePath = path.join(exports.paths.archivedSites, url);
 
-  fs.readFile(exports.paths.archivedSites + '/' + url, function (err, data) {
-    if (err) { 
-      return callback(false); 
-    } else {
-      return callback(true);
-    } 
+  fs.exists(sitePath, function(exists) {
+    callback(exists);
   });
-
 };
 
 exports.downloadUrls = function(urls) {
-  //is this the worker functionality
-  // worker will download url that is urlList
-  // archive that url
-
-  for (var i = 0; i < urls.length; i++) {
-    fs.writeFile(exports.paths.archivedSites + '/' + urls[i], urls[i], function(err, data) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log('Downloaded' + urls[i]);
-      }
-    }); 
-  }
+  // Iterate over urls and pipe to new files
+  _.each(urls, function (url) {
+    if (!url) { return; }
+    request('http://' + url).pipe(fs.createWriteStream(exports.paths.archivedSites + '/' + url));
+  });
 };
