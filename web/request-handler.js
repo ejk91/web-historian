@@ -1,78 +1,61 @@
 var path = require('path');
 var archive = require('../helpers/archive-helpers');
-var fs = require('fs');
-var URL = require('url');
-var http = require('./http-helpers.js');
-// require more modules/folders here!
+var url = require('url');
+var helpers = require('./http-helpers');
 
+var actions = {
+  'GET': function(request, response) {
+    var urlPath = url.parse(request.url).pathname;
 
+    // / means index.html
+    if (urlPath === '/') { urlPath = '/index.html'; }
 
-exports.handleRequest = function (req, res) {
-  var parseURL = URL.parse(req.url, true);
+    helpers.serveAssets(response, urlPath, function() {
+      // trim leading slash if present
+      if (urlPath[0] === '/') { urlPath = urlPath.slice(1); }
 
-  //initially show the landing page - index.html
-   //we recieved a get request
-  if (req.method === 'GET') {
-   // parse the url 
-
-    // if we recieve no path name? - no extra query strings
-    if (parseURL.pathname === '/' || parseURL.pathname === '/favicon.ico') {
-      // load index.html
-      // console.log("IT WORKED!");
-      fs.readFile( __dirname + '/public/index.html', function (err, data) {
-        if (err) {
-          console.log(err); 
+      archive.isUrlInList(urlPath, function(found) {
+        if (found) {
+          helpers.sendRedirect(response, '/loading.html');
         } else {
-          res.writeHead(200, http.headers);
-          res.end(data);
-        }    
-      });
-    } else {
-      // we need to check archives/sites if the file exists
-      fs.readFile( archive.paths.archivedSites + parseURL.pathname, function (err, data) {
-        if (err) {
-          res.writeHead(404, http.headers);
-          res.end();
-        } else {               
-          res.writeHead(200, http.headers);
-          res.end(data);
-        }    
-      });
-      // if true
-        // read the requested file
-      // if false
-        // return 404 error
-    }
-  }
-  // this is post request 
-  if (req.method === 'POST') {
-    req.on('data', function (data) {
-      var url = data.toString().slice(4);
-      fs.appendFile(archive.paths.list, url + '\n', function (error) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log('Added ' + url + ' successfully!');
-          res.writeHead(302, http.headers);
-          res.end();
+          helpers.send404(response);
         }
       });
-      
     });
-    // if path name exists
+  },
+  'POST': function(request, response) {
+    helpers.collectData(request, function(data) {
+      var url = data.split('=')[1].replace('http://', '');
+      // check sites.txt for web site
+      archive.isUrlInList(url, function(found) {
+        if (found) { // found site
+          // check if site is on disk
+          archive.isUrlArchived(url, function(exists) {
+            if (exists) {
+              // redirect to site page (/www.google.com)
+              helpers.sendRedirect(response, '/' + url);
+            } else {
+              // Redirect to loading.html
+              helpers.sendRedirect(response, '/loading.html');
+            }
+          });
+        } else { // not found
+          // add to sites.txt
+          archive.addUrlToList(url, function() {
+            // Redirect to loading.html
+            helpers.sendRedirect(response, '/loading.html');
+          });
+        }
+      });
+    });
   }
-  // if (parseURL.pathname) {
-    // call readListofURLS
-    // archive.readListOfUrls('callback');
-    // archive.addUrlToList(parseURL.pathname);
-      // this will give us a list of current URLS
-      // check if URL is in the list (isURLInList)
-        // if URL is in the list
-          // if URL Archived (isURLArchived)
-            // if it is not archived - return we are working on it
-            // if it is archived - load the page
-        // if URL is not in the list
-          // add url onto to the list (addURLToList)
-          // where does the worker (downloadURLs) fit in?
-          // return - we are working on it     
+};
+
+exports.handleRequest = function (req, res) {
+  var handler = actions[req.method];
+  if (handler) {
+    handler(req, res);
+  } else {
+    helpers.send404(response);
+  }
 };
